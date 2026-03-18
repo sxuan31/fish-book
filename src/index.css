@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@theme {
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-blue-600: #2563eb;
+  --color-orange-500: #f97316;
+  --color-emerald-600: #059669;
+
+  --radius-2xl: 1rem;
+  --radius-3xl: 3rem;
+  --radius-4xl: 4rem;
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from { height: 0 }
+    to { height: var(--radix-accordion-content-height) }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height) }
+    to { height: 0 }
+  }
+}
+
+/* 
+  Glassmorphism (毛玻璃效果) 处理顶部导航和悬浮操作栏
+*/
+@utility glass {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@utility glass-dark {
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 
+  Neumorphism (新拟物化) 或微弱的 Drop Shadow 增加卡片深度感
+*/
+@utility neumorphic-shadow {
+  box-shadow: 20px 20px 60px #d1d5db,
+             -20px -20px 60px #ffffff;
+}
+
+@utility soft-shadow {
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+}
+
+/* 
+  自定义滚动条: 隐藏原生滚动条，使用窄细的 custom-scrollbar。
+*/
+@utility hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 20px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.8);
+  }
+}
+
+html, body {
+  background-color: var(--color-slate-50);
+  color: #0f172a;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
