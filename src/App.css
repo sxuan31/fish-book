@@ -7,7 +7,7 @@
 
 @layer base {
   body {
-    @apply bg-[#0A1017] text-slate-100 antialiased selection:bg-amber-500/30 selection:text-amber-200;
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary;
   }
 }
 
