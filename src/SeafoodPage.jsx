@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, ChevronRight, X, Fish, Shell, MapPin, ChefHat, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -12,6 +13,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 import { cn } from "@/lib/utils";
+import LiquidEther from '@/components/ui/liquid-ether';
 
 // ==========================================
 // 1. 数据源 (超过100种海鲜数据的子集，用于演示双粘滞和滚动)
@@ -1863,6 +1865,8 @@ export default function SeafoodPage() {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSeafood, setSelectedSeafood] = useState(null);
+  // mobile: 'categories' | 'list' | 'detail'
+  const [mobileView, setMobileView] = useState('categories');
 
   const filteredData = useMemo(() => {
     let data = SEAFOOD_DATA;
@@ -1880,58 +1884,77 @@ export default function SeafoodPage() {
   }, [searchQuery, activeCategory]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background font-sans text-foreground">
+    <div className="h-screen flex flex-col overflow-hidden bg-background font-sans text-foreground relative">
+      {/* LiquidEther 背景层 */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-80 mix-blend-screen">
+        <LiquidEther />
+      </div>
+
+      <div className="absolute inset-0 z-0 bg-background/60 backdrop-blur-sm pointer-events-none" />
 
       {/* 顶部极简导航区域 */}
-      <header className="flex-shrink-0 z-40 w-full bg-background border-b border-border">
-        <div className="px-6 md:px-10 h-16 flex items-center justify-between max-w-[1920px] mx-auto">
-          <div className="flex items-center gap-6">
-            <div>
+      <header className="flex-shrink-0 z-40 w-full bg-background/70 backdrop-blur-lg border-b border-border/50 relative">
+        <div className="px-4 md:px-6 lg:px-10 h-14 md:h-16 flex items-center justify-between max-w-[1920px] mx-auto">
+          <div className="flex items-center gap-4 md:gap-6">
+            {/* Mobile back button */}
+            {mobileView === 'list' && (
+              <Button variant="ghost" size="sm" onClick={() => setMobileView('categories')} className="md:hidden flex items-center gap-1 -ml-2 text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronRight className="w-4 h-4 rotate-180" />
+                <span>目录</span>
+              </Button>
+            )}
+            {mobileView === 'detail' && (
+              <Button variant="ghost" size="sm" onClick={() => { setSelectedSeafood(null); setMobileView('list'); }} className="md:hidden flex items-center gap-1 -ml-2 text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronRight className="w-4 h-4 rotate-180" />
+                <span>列表</span>
+              </Button>
+            )}
+            {mobileView === 'categories' && (
+              <div className="md:hidden">
+                <h1 className="text-base font-bold tracking-tight">海鲜 <span className="text-muted-foreground font-normal">图鉴</span></h1>
+              </div>
+            )}
+            <div className="hidden md:block">
               <h1 className="text-xl font-bold tracking-tight">
                 海鲜 <span className="text-muted-foreground font-normal">图鉴</span>
               </h1>
             </div>
-            {/* Switcher & Theme inside Header */}
+            {/* Switcher & Theme - desktop only */}
             <div className="hidden md:flex items-center gap-4 ml-8">
-              <div className="flex bg-muted rounded-md p-1">
-                <button 
-                  onClick={() => navigate('/fish')}
-                  className={cn("px-4 py-1.5 rounded-sm text-sm font-medium transition-all", activePage === 'fish' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-                >
-                  海鲜
-                </button>
-                <button 
-                  onClick={() => navigate('/venues')}
-                  className={cn("px-4 py-1.5 rounded-sm text-sm font-medium transition-all", activePage === 'venues' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-                >
-                  场馆
-                </button>
-              </div>
+              <Tabs value={activePage} onValueChange={(v) => navigate(`/${v}`)}>
+                <TabsList className="bg-muted/50 backdrop-blur-md">
+                  <TabsTrigger value="fish">海鲜</TabsTrigger>
+                  <TabsTrigger value="venues">场馆</TabsTrigger>
+                </TabsList>
+              </Tabs>
               <ThemeToggle />
             </div>
           </div>
 
-          <div className="relative w-64 md:w-96 group">
-            <input
+          <div className="relative w-40 sm:w-56 md:w-96 group">
+            <Input
               type="text"
-              placeholder="Search..."
+              placeholder="搜索海鲜..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setSelectedSeafood(null);
+                if (e.target.value) setMobileView('list');
               }}
-              className="w-full h-9 bg-muted/50 border border-input rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
+              className="w-full pl-3 pr-8 bg-muted/50 transition-colors border-border/50"
             />
             {searchQuery ? (
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedSeafood(null);
                 }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors mr-3"
+                className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground mr-0.5"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             ) : (
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             )}
@@ -1939,12 +1962,17 @@ export default function SeafoodPage() {
         </div>
       </header>
 
-      {/* 主体三列结构：剔除圆角阴影框，全黑底+极细白线分割 */}
+      {/* 主体三列结构（桌面）/ 单列钻取（手机） */}
       <main className="flex-1 flex overflow-hidden max-w-[1920px] mx-auto w-full">
 
         {/* === 第一列：左侧目录分类 === */}
-        <aside className="w-20 md:w-72 flex-shrink-0 flex flex-col pt-6 border-r border-border relative bg-muted/10">
-          <div className="px-6 mb-6 hidden md:block">
+        {/* Mobile: show when mobileView === 'categories'; Desktop: always show */}
+        <aside className={cn(
+          "flex-shrink-0 flex flex-col pt-4 md:pt-6 border-r border-border/50 relative bg-background/40 backdrop-blur-md",
+          "w-full md:w-72",
+          mobileView === 'categories' ? "flex md:flex" : "hidden md:flex"
+        )}>
+          <div className="px-6 mb-4 hidden md:block">
             <h3 className="text-sm font-semibold tracking-tight text-foreground">目录大类</h3>
           </div>
 
@@ -1959,20 +1987,20 @@ export default function SeafoodPage() {
                           setActiveCategory(category.id);
                           setSearchQuery('');
                           setSelectedSeafood(null);
+                          setMobileView('list');
                         }}
                         className={cn(
-                          "w-full justify-start h-14 md:h-12 px-6 relative group transition-all",
+                          "w-full justify-start h-14 md:h-12 px-4 md:px-6 relative group transition-all",
                           isActive ? "font-bold text-primary" : "text-muted-foreground"
                         )}
                       >
                         {isActive && (
                           <motion.div layoutId="navline" className="absolute left-0 top-1 bottom-1 w-1 bg-primary rounded-r-md" />
                         )}
-                        <span className="hidden md:block text-sm font-medium">
-                          {category.name}
-                        </span>
-                        <span className="md:hidden text-xl">
-                          {category.icon}
+                        <span className="text-sm font-medium flex items-center gap-3">
+                          <span className="text-xl">{category.icon}</span>
+                          <span className="">{category.name}</span>
+                          <ChevronRight className="ml-auto w-4 h-4 text-muted-foreground md:hidden" />
                         </span>
                       </Button>
                   )
@@ -1981,8 +2009,13 @@ export default function SeafoodPage() {
             </ScrollArea>
         </aside>
 
-        {/* === 第二列：中间项目列表 (Index Style) === */}
-        <section className="w-[340px] md:w-[420px] flex-shrink-0 flex flex-col border-r border-border bg-background relative">
+        {/* === 第二列：中间项目列表 === */}
+        {/* Mobile: show when mobileView === 'list'; Desktop: always show */}
+        <section className={cn(
+          "flex-shrink-0 flex flex-col border-r border-border/50 bg-background/50 backdrop-blur-xl relative",
+          "w-full md:w-[420px]",
+          mobileView === 'list' ? "flex md:flex" : "hidden md:flex"
+        )}>
           <div className="h-14 flex items-center justify-between px-6 border-b border-border">
             <span className="text-sm font-medium text-muted-foreground">
               {searchQuery ? '搜索结果' : '全部分类'}
@@ -2004,9 +2037,12 @@ export default function SeafoodPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={() => setSelectedSeafood(item)}
+                        onClick={() => {
+                          setSelectedSeafood(item);
+                          setMobileView('detail');
+                        }}
                         className={cn(
-                          "group cursor-pointer flex gap-4 items-center p-3 transition-all hover:bg-accent hover:text-accent-foreground",
+                          "group cursor-pointer flex flex-row gap-4 items-center p-3 transition-all hover:bg-accent hover:text-accent-foreground",
                           isSelected ? "bg-accent border-primary ring-1 ring-primary" : ""
                         )}
                       >
@@ -2043,7 +2079,11 @@ export default function SeafoodPage() {
         </section>
 
         {/* === 第三列：右侧极简排版详情 === */}
-        <section className="flex-1 bg-background relative overflow-hidden flex flex-col">
+        {/* Mobile: show when mobileView === 'detail'; Desktop: always show */}
+        <section className={cn(
+          "flex-1 bg-background/50 backdrop-blur-2xl relative overflow-hidden flex flex-col",
+          mobileView === 'detail' ? "flex md:flex" : "hidden md:flex"
+        )}>
           <AnimatePresence mode="wait">
             {selectedSeafood ? (
               <motion.div
@@ -2177,6 +2217,30 @@ export default function SeafoodPage() {
         </section>
 
       </main>
+
+      {/* 移动端底栏导航 */}
+      <footer className="md:hidden flex-shrink-0 h-16 border-t border-border bg-background/80 backdrop-blur-md flex items-center justify-around px-6 z-50">
+        <button 
+          onClick={() => navigate('/fish')}
+          className={cn("flex flex-col items-center gap-1 transition-colors", activePage === 'fish' ? "text-primary" : "text-muted-foreground")}
+        >
+          <div className={cn("p-1 rounded-md transition-colors", activePage === 'fish' ? "bg-primary/10" : "")}>
+            <span className="text-xl">🐟</span>
+          </div>
+          <span className="text-[10px] font-medium uppercase tracking-widest">海鲜</span>
+        </button>
+        <button 
+          onClick={() => navigate('/venues')}
+          className={cn("flex flex-col items-center gap-1 transition-colors", activePage === 'venues' ? "text-primary" : "text-muted-foreground")}
+        >
+          <div className={cn("p-1 rounded-md transition-colors", activePage === 'venues' ? "bg-primary/10" : "")}>
+            <span className="text-xl">🏟️</span>
+          </div>
+          <span className="text-[10px] font-medium uppercase tracking-widest">场馆</span>
+        </button>
+        <div className="h-8 w-px bg-border mx-2" />
+        <ThemeToggle />
+      </footer>
     </div>
   );
 }

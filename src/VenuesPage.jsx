@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, ChevronRight, X, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import LiquidEther from '@/components/ui/liquid-ether';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -187,6 +189,8 @@ export default function VenuesPage() {
   const [activeCategory, setActiveCategory] = useState(VENUE_CATEGORIES[0].id);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVenue, setSelectedVenue] = useState(null);
+  // mobile: 'categories' | 'list' | 'detail'
+  const [mobileView, setMobileView] = useState('categories');
 
   const filteredData = useMemo(() => {
     let data = VENUES_DATA;
@@ -205,59 +209,77 @@ export default function VenuesPage() {
   }, [searchQuery, activeCategory]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background font-sans text-foreground">
+    <div className="h-screen flex flex-col overflow-hidden bg-background font-sans text-foreground relative">
+      {/* LiquidEther 背景层 */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-80 mix-blend-screen">
+        <LiquidEther />
+      </div>
 
-      {/* 顶部极简导航区域 */}
-      <header className="flex-shrink-0 z-40 w-full bg-background border-b border-border">
-        <div className="px-6 md:px-10 h-16 flex items-center justify-between max-w-[1920px] mx-auto">
-          <div className="flex items-center gap-6">
-            <div>
+      <div className="absolute inset-0 z-0 bg-background/60 backdrop-blur-sm pointer-events-none" />
+
+      {/* 顶部导航区域 */}
+      <header className="flex-shrink-0 z-40 w-full bg-background/70 backdrop-blur-lg border-b border-border/50 relative">
+        <div className="px-4 md:px-6 lg:px-10 h-14 md:h-16 flex items-center justify-between max-w-[1920px] mx-auto">
+          <div className="flex items-center gap-4 md:gap-6">
+            {/* Mobile back buttons */}
+            {mobileView === 'list' && (
+              <Button variant="ghost" size="sm" onClick={() => setMobileView('categories')} className="md:hidden flex items-center gap-1 -ml-2 text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronRight className="w-4 h-4 rotate-180" />
+                <span>城市</span>
+              </Button>
+            )}
+            {mobileView === 'detail' && (
+              <Button variant="ghost" size="sm" onClick={() => { setSelectedVenue(null); setMobileView('list'); }} className="md:hidden flex items-center gap-1 -ml-2 text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronRight className="w-4 h-4 rotate-180" />
+                <span>列表</span>
+              </Button>
+            )}
+            {mobileView === 'categories' && (
+              <div className="md:hidden">
+                <h1 className="text-base font-bold tracking-tight">世界场馆 <span className="text-muted-foreground font-normal">档案</span></h1>
+              </div>
+            )}
+            <div className="hidden md:block">
               <h1 className="text-xl font-bold tracking-tight">
                 世界场馆 <span className="text-muted-foreground font-normal">档案</span>
               </h1>
             </div>
-            
-            {/* Switcher & Theme inside Header */}
+            {/* Switcher & Theme - desktop only */}
             <div className="hidden md:flex items-center gap-4 ml-8">
-              <div className="flex bg-muted rounded-md p-1">
-                <button 
-                  onClick={() => navigate('/fish')}
-                  className={cn("px-4 py-1.5 rounded-sm text-sm font-medium transition-all", activePage === 'fish' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-                >
-                  海鲜
-                </button>
-                <button 
-                  onClick={() => navigate('/venues')}
-                  className={cn("px-4 py-1.5 rounded-sm text-sm font-medium transition-all", activePage === 'venues' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
-                >
-                  场馆
-                </button>
-              </div>
+              <Tabs value={activePage} onValueChange={(v) => navigate(`/${v}`)}>
+                <TabsList className="bg-muted/50 backdrop-blur-md">
+                  <TabsTrigger value="fish">海鲜</TabsTrigger>
+                  <TabsTrigger value="venues">场馆</TabsTrigger>
+                </TabsList>
+              </Tabs>
               <ThemeToggle />
             </div>
           </div>
 
-          <div className="relative w-48 md:w-96 group">
-            <input
+          <div className="relative w-40 sm:w-56 md:w-96 group">
+            <Input
               type="text"
-              placeholder="Search..."
+              placeholder="搜索场馆..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setSelectedVenue(null);
+                if (e.target.value) setMobileView('list');
               }}
-              className="w-full h-9 bg-muted/50 border border-input rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
+              className="w-full pl-3 pr-8 bg-muted/50 transition-colors border-border/50"
             />
             {searchQuery ? (
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedVenue(null);
                 }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors mr-3"
+                className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground mr-0.5"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             ) : (
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             )}
@@ -269,7 +291,11 @@ export default function VenuesPage() {
       <main className="flex-1 flex overflow-hidden max-w-[1920px] mx-auto w-full">
 
         {/* === 第一列：左侧目录分类 === */}
-        <aside className="w-20 md:w-72 flex-shrink-0 flex flex-col pt-6 border-r border-border relative bg-muted/10">
+        <aside className={cn(
+          "flex-shrink-0 flex flex-col pt-4 md:pt-6 border-r border-border/50 relative bg-background/40 backdrop-blur-md",
+          "w-full md:w-72",
+          mobileView === 'categories' ? "flex md:flex" : "hidden md:flex"
+        )}>
           <div className="px-6 mb-6 hidden md:block">
             <h3 className="text-sm font-semibold tracking-tight text-foreground">所在城市</h3>
           </div>
@@ -286,20 +312,20 @@ export default function VenuesPage() {
                           setActiveCategory(category.id);
                           setSearchQuery('');
                           setSelectedVenue(null);
+                          setMobileView('list');
                         }}
                         className={cn(
-                          "w-full justify-start h-14 md:h-12 px-6 relative group transition-all",
+                          "w-full justify-start h-14 md:h-12 px-4 md:px-6 relative group transition-all",
                           isActive ? "font-bold text-primary" : "text-muted-foreground"
                         )}
                       >
                         {isActive && (
                           <motion.div layoutId="navline_venues" className="absolute left-0 top-1 bottom-1 w-1 bg-primary rounded-r-md" />
                         )}
-                        <span className="hidden md:block text-sm font-medium">
-                          {category.name} ({category.icon})
-                        </span>
-                        <span className="md:hidden text-xl">
-                          {category.icon}
+                        <span className="text-sm font-medium flex items-center gap-3">
+                          <span className="text-xl">{category.icon}</span>
+                          <span>{category.name}</span>
+                          <ChevronRight className="ml-auto w-4 h-4 text-muted-foreground md:hidden" />
                         </span>
                       </Button>
                   )
@@ -309,7 +335,11 @@ export default function VenuesPage() {
         </aside>
 
         {/* === 第二列：中间项目列表 === */}
-        <section className="w-[340px] md:w-[420px] flex-shrink-0 flex flex-col border-r border-border bg-background relative">
+        <section className={cn(
+          "flex-shrink-0 flex flex-col border-r border-border/50 bg-background/50 backdrop-blur-xl relative",
+          "w-full md:w-[420px]",
+          mobileView === 'list' ? "flex md:flex" : "hidden md:flex"
+        )}>
           <div className="h-14 flex items-center justify-between px-6 border-b border-border">
             <span className="text-sm font-medium text-muted-foreground">
               {searchQuery ? '搜索结果' : '所有场馆'}
@@ -331,9 +361,12 @@ export default function VenuesPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={() => setSelectedVenue(item)}
+                        onClick={() => {
+                          setSelectedVenue(item);
+                          setMobileView('detail');
+                        }}
                         className={cn(
-                          "group cursor-pointer flex gap-4 items-center p-3 transition-all hover:bg-accent hover:text-accent-foreground",
+                          "group cursor-pointer flex flex-row gap-4 items-center p-3 transition-all hover:bg-accent hover:text-accent-foreground",
                           isSelected ? "bg-accent border-primary ring-1 ring-primary" : ""
                         )}
                       >
@@ -372,8 +405,11 @@ export default function VenuesPage() {
             </ScrollArea>
         </section>
 
-        {/* === 第三列：右侧极简排版详情 === */}
-        <section className="flex-1 bg-background relative overflow-hidden flex flex-col">
+        {/* === 第三列：右侧详情 === */}
+        <section className={cn(
+          "flex-1 bg-background/50 backdrop-blur-2xl relative overflow-hidden flex flex-col",
+          mobileView === 'detail' ? "flex md:flex" : "hidden md:flex"
+        )}>
           <AnimatePresence mode="wait">
             {selectedVenue ? (
               <motion.div
@@ -520,6 +556,30 @@ export default function VenuesPage() {
         </section>
 
       </main>
+
+      {/* 移动端底栏导航 */}
+      <footer className="md:hidden flex-shrink-0 h-16 border-t border-border bg-background/80 backdrop-blur-md flex items-center justify-around px-6 z-50">
+        <button 
+          onClick={() => navigate('/fish')}
+          className={cn("flex flex-col items-center gap-1 transition-colors", activePage === 'fish' ? "text-primary" : "text-muted-foreground")}
+        >
+          <div className={cn("p-1 rounded-md transition-colors", activePage === 'fish' ? "bg-primary/10" : "")}>
+            <span className="text-xl">🐟</span>
+          </div>
+          <span className="text-[10px] font-medium uppercase tracking-widest">海鲜</span>
+        </button>
+        <button 
+          onClick={() => navigate('/venues')}
+          className={cn("flex flex-col items-center gap-1 transition-colors", activePage === 'venues' ? "text-primary" : "text-muted-foreground")}
+        >
+          <div className={cn("p-1 rounded-md transition-colors", activePage === 'venues' ? "bg-primary/10" : "")}>
+            <span className="text-xl">🏟️</span>
+          </div>
+          <span className="text-[10px] font-medium uppercase tracking-widest">场馆</span>
+        </button>
+        <div className="h-8 w-px bg-border mx-2" />
+        <ThemeToggle />
+      </footer>
     </div>
   );
 }
